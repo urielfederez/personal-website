@@ -153,6 +153,7 @@ def lambda_handler(event, context):
         if (
             verification.get("success") is not True
             or verification.get("hostname") not in ALLOWED_HOSTNAMES
+            or verification.get("action") != "contact"
         ):
             return response(400, {"error": "Verification failed. Please retry"})
 
