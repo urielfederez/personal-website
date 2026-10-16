@@ -1,5 +1,8 @@
 ---
 import "../styles/global.css";
+
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+const apiUrl = import.meta.env.PUBLIC_CONTACT_API_URL;
 ---
 
 <html lang="en">
@@ -135,25 +138,42 @@ import "../styles/global.css";
 
         <section id="contact">
           <h2>Contact</h2>
-          <div class="flex flex-col gap-2">
+          <form class="flex flex-col gap-2" id="contact-form">
             <input
-              id="email"
+              name="name"
+              type="text"
+              maxlength="100"
+              class="border p-2"
+              required
+            />
+            <input
               name="email"
               type="email"
               placeholder="example@mail.com"
+              maxlength="254"
               class="border p-2"
+              required
             />
             <textarea
-              id="message"
               name="message"
               rows="3"
               class="border p-2"
-              placeholder=""></textarea>
+              maxlength="5000"
+              placeholder=""
+              required></textarea>
+            <div
+              class="cf-turnstile"
+              data-sitekey={siteKey}
+              data-action="contact"
+            >
+            </div>
             <button
+              type="submit"
               class="border cursor-pointer hover:bg-black hover:text-white self-end px-4 py-2"
               >Send</button
             >
-          </div>
+            <p id="contact-status" role="status" aria-live="polite"></p>
+          </form>
         </section>
       </div>
     </main>
@@ -193,5 +213,68 @@ import "../styles/global.css";
       </ul>
       <p class="text-sm">&copy; {new Date().getFullYear()}</p>
     </footer>
+    <script is:inline define:vars={{ apiUrl }}>
+      const form = document.querySelector("#contact-form");
+      const status = document.querySelector("#contact-status");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        if (!form || !status) return;
+
+        const data = new FormData(form);
+        const turnstileToken = data.get("cf-turnstile-response");
+
+        if (typeof turnstileToken !== "string" || !turnstileToken) {
+          status.textContent = "Please complete the verification";
+          return;
+        }
+
+        const button = form.querySelector('button[type="submit"]');
+
+        if (button) button.disabled = true;
+        status.textContent = "Sending...";
+
+        try {
+          const result = await fetch(`${apiUrl}/contact`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: data.get("name"),
+              email: data.get("email"),
+              message: data.get("message"),
+              turnstileToken,
+            }),
+          });
+
+          const payload = await result.json();
+
+          if (!result.ok) {
+            throw new Error(payload.error || "Unable to send your message");
+          }
+
+          status.textContent = "Message sent. Thank you!";
+          form.reset();
+
+          if (window.turnstile) {
+            window.turnstile.reset();
+          }
+        } catch (error) {
+          status.textContent =
+            error instanceof Error
+              ? error.message
+              : "Something went wrong. Please try again.";
+        } finally {
+          if (button) button.disabled = false;
+        }
+      });
+    </script>
+    <script
+      is:inline
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      async
+      defer></script>
   </body>
 </html>
