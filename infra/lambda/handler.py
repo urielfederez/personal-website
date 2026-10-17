@@ -27,7 +27,7 @@ SES_TO_ADDRESS = os.environ["SES_TO_ADDRESS"]
 
 ssm = boto3.client("ssm", region_name=AWS_REGION)
 ses = boto3.client("ses", region_name=AWS_REGION)
-dynamodb = boto3.resource("dynamodb")
+dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 
 
 _turnstile_secret = None
