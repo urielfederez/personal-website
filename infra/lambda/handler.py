@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from datetime import UTC, datetime
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -12,6 +13,7 @@ AWS_REGION = "ap-southeast-1"
 MAX_BODY_BYTES = 10_000
 MAX_NAME_LENGTH = 100
 MAX_MESSAGE_LENGTH = 5_000
+DAILY_QUOTA = 20
 
 ALLOWED_HOSTNAMES = {
     "urielfederez.com",
@@ -19,11 +21,14 @@ ALLOWED_HOSTNAMES = {
 }
 
 TURNSTILE_SECRET_PARAMETER = os.environ["TURNSTILE_SECRET_PARAMETER"]
+QUOTA_TABLE_NAME = os.environ["QUOTA_TABLE_NAME"]
 SES_FROM_ADDRESS = os.environ["SES_FROM_ADDRESS"]
 SES_TO_ADDRESS = os.environ["SES_TO_ADDRESS"]
 
 ssm = boto3.client("ssm", region_name=AWS_REGION)
 ses = boto3.client("ses", region_name=AWS_REGION)
+dynamodb = boto3.resource("dynamodb")
+
 
 _turnstile_secret = None
 
@@ -39,6 +44,26 @@ def get_turnstile_secret():
         _turnstile_secret = result["Parameter"]["Value"]
 
     return _turnstile_secret
+
+
+def reserve_quota_slot():
+    table = dynamodb.Table(QUOTA_TABLE_NAME)
+    today = datetime.now(UTC).date().isoformat()
+
+    try:
+        table.update_item(
+            Key={"date": today},
+            UpdateExpression="SET #count = if_not_exists(#count, :zero) + :one",
+            ConditionExpression="attribute_not_exists(#count) OR #count < :limit",
+            ExpressionAttributeNames={"#count": "count"},
+            ExpressionAttributeValues={":zero": 0, ":one": 1, ":limit": DAILY_QUOTA},
+        )
+    except ClientError as exc:
+        if exc.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            return False
+        raise
+
+    return True
 
 
 def validate_submission(body):
@@ -156,10 +181,21 @@ def lambda_handler(event, context):
             or verification.get("action") != "contact"
         ):
             return response(400, {"error": "Verification failed. Please retry"})
-
-        send_email(name, email, message)
     except RuntimeError:
         return response(503, {"error": "Unable to verify submission right now."})
+
+    try:
+        if not reserve_quota_slot():
+            return response(
+                429, {"error": "Daily contact limit reached. Please try again tomorrow"}
+            )
+    except (ClientError, BotoCoreError):
+        return response(
+            503, {"error": "Service temporarily unavailable. Please try again later"}
+        )
+
+    try:
+        send_email(name, email, message)
     except (ClientError, BotoCoreError):
         return response(500, {"error": "Unable to send your message right now."})
 
