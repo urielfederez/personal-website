@@ -54,6 +54,7 @@ resource "aws_lambda_function" "contact_form" {
       TURNSTILE_SECRET_PARAMETER = "/portfolio/contact-form/turnstile-secret"
       SES_FROM_ADDRESS           = "contact@urielfederez.com"
       SES_TO_ADDRESS             = "urielfederez@gmail.com"
+      QUOTA_TABLE_NAME           = aws_dynamodb_table.contact_form_quota.name
     }
   }
 }
@@ -133,4 +134,34 @@ resource "aws_lambda_permission" "allow_api_gateway" {
 output "contact_form_api_url" {
   description = "Base URL for the portfolio contact form API"
   value       = aws_apigatewayv2_api.contact_form.api_endpoint
+}
+
+resource "aws_dynamodb_table" "contact_form_quota" {
+  name         = "portfolio-contact-form-quota"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "date"
+
+  attribute {
+    name = "date"
+    type = "S"
+  }
+}
+
+resource "aws_iam_role_policy" "contact_form_quota" {
+  name = "contact-form-quota"
+  role = aws_iam_role.lambda_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:UpdateItem",
+          "dynamodb:GetItem"
+        ]
+        Resource = aws_dynamodb_table.contact_form_quota.arn
+      }
+    ]
+  })
 }

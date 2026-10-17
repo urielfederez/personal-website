@@ -112,7 +112,7 @@ def send_email(name, email, message):
             "Subject": {"Data": f"Portfolio contact form: {name}", "Charset": "UTF-8"},
             "Body": {
                 "Text": {
-                    "Data": f"Name: {name}\nEmail: {email}\n\n {message}",
+                    "Data": f"Name: {name}\nEmail: {email}\n\n{message}",
                     "Charset": "UTF-8",
                 }
             },
