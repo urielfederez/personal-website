@@ -1,0 +1,47 @@
+---
+import { getCollection, render } from "astro:content";
+
+export const getStaticPaths = async () => {
+  const articles = await getCollection("articles");
+
+  return Promise.all(
+    articles.map(async (article) => ({
+      params: { slug: article.id },
+      props: { article },
+    })),
+  );
+};
+
+const { article } = Astro.props;
+const { Content } = await render(article);
+
+const dateLabel = article.data.date.toLocaleDateString("en", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{article.data.title}</title>
+    <meta name="description" content={article.data.description} />
+  </head>
+  <body>
+    <main>
+      <article>
+        <header>
+          <h1>{article.data.title}</h1>
+          <p>{article.data.description}</p>
+          <time datetime={article.data.date.toISOString()}>
+            {dateLabel}
+          </time>
+        </header>
+
+        <Content />
+      </article>
+    </main>
+  </body>
+</html>

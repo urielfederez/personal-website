@@ -1,280 +1,63 @@
 ---
-import "../styles/global.css";
+import BaseLayout from "@/layouts/BaseLayout.astro";
 
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 const apiUrl = import.meta.env.PUBLIC_CONTACT_API_URL;
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Uriel Federez</title>
-  </head>
-  <body class="grid gap-6 leading-6">
-    <main
-      class="max-w-3xl mx-auto w-full flex max-md:flex-col items-start gap-6 pt-2 md:pt-12 max-md:px-2"
-    >
-      <aside class="top-0 sticky">
-        <nav class="whitespace-nowrap grid gap-4">
-          <h1 class="font-bold">Uriel Federez</h1>
-          <ul class="flex flex-col gap-1">
-            <li><a href="#about" class="hover:underline">About</a></li>
-            <li>
-              <a href="#experience" class="hover:underline">Experience</a>
-            </li>
-            <li><a href="#projects" class="hover:underline">Projects</a></li>
-            <li><a href="#contact" class="hover:underline">Contact</a></li>
-          </ul>
-        </nav>
-      </aside>
-      <div class="grid gap-4">
-        <section class="grid gap-2" id="about">
-          <p>
-            Hello! I'm Uriel. I'm a software engineer who enjoys building
-            software across the stack, working on frontend interfaces to backend
-            systems and mobile apps. I explore computer graphics, interesting
-            algorithms, and systems programming through personal projects. Here
-            you'll find a list of stuff I've worked on professionally and on my
-            own as well as ways to get in touch.
-          </p>
-        </section>
-
-        <section id="experience">
-          <h2>Experience</h2>
-          <div class="grid gap-4">
-            <div>
-              <div class="flex items-center justify-between">
-                <p>
-                  <strong>Full Stack Software Engineer</strong>
-                </p>
-                <code class="uppercase tracking-wide text-sm">
-                  2023 &mdash; present
-                </code>
-              </div>
-              <p>
-                <em>Audiobook QA Platform (media client)</em>
-              </p>
-              <ul class="list-disc list-outside ml-4 mb-4">
-                <li>
-                  Co-built an AI-assisted QA platform that detects mismatches
-                  between audiobook narration and manuscripts. Use
-                  false-positive flags using pronunciation assessment and fuzzy
-                  text-matching heuristics.
-                </li>
-                <li>
-                  Built the React interface for proofreading, snychronized audio
-                  playback, real-time highlighting of discrepancies,
-                  collaboration and communication features.
-                </li>
-                <li>
-                  Built supporting services to export MIDI files marking
-                  discrepancies and resolved recurring production connectivity
-                  issues involving Gunicorn and PostgreSQL.
-                </li>
-              </ul>
-
-              <p>
-                <em>
-                  Dental Cosmetic Preview App, Proof of Concept (healthcare
-                  client)
-                </em>
-              </p>
-              <ul class="list-disc list-outside ml-4 mb-4">
-                <li>
-                  Co-built a React Native app with guided face photography,
-                  image comparison and practice management.
-                </li>
-                <li>
-                  Implemented cross-platform mapping for face detection
-                  coordinates and auotmated capture.
-                </li>
-              </ul>
-
-              <p>
-                <em> Internal Company Portal </em>
-              </p>
-              <ul class="list-disc list-outside ml-4">
-                <li>
-                  Built version 1 of the company's internal portal for leave
-                  requests, project allocation, and notifications, adopted for
-                  company-wide use.
-                </li>
-                <li>
-                  Set up GitLab CI pipelines running frontend, backend, and
-                  Cypress end-to-end tests.
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section id="projects">
-          <h2>Projects</h2>
-
-          <div class="grid gap-4">
-            <div class="grid grid-cols-[5rem_1fr] gap-2">
-              <div class="aspect-square w-full bg-gray-400"></div>
-              <div class="flex justify-center flex-col">
-                <h3 class="font-bold">Zig Chess Engine</h3>
-                <p>A chess engine written in Zig</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-[5rem_1fr] gap-2">
-              <div class="aspect-square w-full bg-gray-400"></div>
-              <div class="flex justify-center flex-col">
-                <h3 class="font-bold">Volume Renderer</h3>
-                <p>
-                  A tool to visualize MRIs and CT scans, developed using OpenGL
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="contact">
-          <h2>Contact</h2>
-          <form class="flex flex-col gap-2" id="contact-form">
-            <input
-              name="name"
-              type="text"
-              maxlength="100"
-              class="border p-2"
-              required
-            />
-            <input
-              name="email"
-              type="email"
-              placeholder="example@mail.com"
-              maxlength="254"
-              class="border p-2"
-              required
-            />
-            <textarea
-              name="message"
-              rows="3"
-              class="border p-2"
-              maxlength="5000"
-              placeholder=""
-              required></textarea>
-            <div
-              class="cf-turnstile"
-              data-sitekey={siteKey}
-              data-action="contact"
-            >
-            </div>
-            <button
-              type="submit"
-              class="border cursor-pointer hover:bg-black hover:text-white self-end px-4 py-2"
-              >Send</button
-            >
-            <p id="contact-status" role="status" aria-live="polite"></p>
-          </form>
-        </section>
+<BaseLayout title="Uriel Federez" showTitleInHeader={false}>
+  <main class="px-10 flex flex-col gap-12">
+    <div class="grid gap-4 grid-cols-2">
+      <div class="flex flex-col gap-4">
+        <h2 class="text-6xl font-bold">Uriel Federez</h2>
+        <p class="text-2xl font-light max-w-[35ch]">
+          I'm a software engineer working across the full stack, exploring
+          computer graphics and systems programming. Here I document the things
+          I build and what I learn along the way.
+        </p>
       </div>
-    </main>
-    <footer
-      class="max-w-3xl mx-auto w-full flex justify-between items-center pb-12 max-md:px-2"
-    >
-      <ul class="flex items-center gap-1 text-sm">
-        <li>
-          <a
-            href="https://github.com/urielfederez"
-            target="_blank"
-            class="hover:underline"
-          >
-            GitHub
-          </a>
-        </li>
-        <li>&bull;</li>
-        <li>
-          <a
-            href="https://code.urielfederez.com/"
-            target="_blank"
-            class="hover:underline"
-          >
-            Forgejo
-          </a>
-        </li>
-        <li>&bull;</li>
-        <li>
-          <a
-            href="https://www.linkedin.com/in/uriel-federez"
-            target="_blank"
-            class="hover:underline"
-          >
-            LinkedIn
-          </a>
-        </li>
-      </ul>
-      <p class="text-sm">&copy; {new Date().getFullYear()}</p>
-    </footer>
-    <script is:inline define:vars={{ apiUrl }}>
-      const form = document.querySelector("#contact-form");
-      const status = document.querySelector("#contact-status");
+    </div>
 
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-
-        if (!form || !status) return;
-
-        const data = new FormData(form);
-        const turnstileToken = data.get("cf-turnstile-response");
-
-        if (typeof turnstileToken !== "string" || !turnstileToken) {
-          status.textContent = "Please complete the verification";
-          return;
-        }
-
-        const button = form.querySelector('button[type="submit"]');
-
-        if (button) button.disabled = true;
-        status.textContent = "Sending...";
-
-        try {
-          const result = await fetch(`${apiUrl}/contact`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: data.get("name"),
-              email: data.get("email"),
-              message: data.get("message"),
-              turnstileToken,
-            }),
-          });
-
-          const payload = await result.json();
-
-          if (!result.ok) {
-            throw new Error(payload.error || "Unable to send your message");
-          }
-
-          status.textContent = "Message sent. Thank you!";
-          form.reset();
-
-          if (window.turnstile) {
-            window.turnstile.reset();
-          }
-        } catch (error) {
-          status.textContent =
-            error instanceof Error
-              ? error.message
-              : "Something went wrong. Please try again.";
-        } finally {
-          if (button) button.disabled = false;
-        }
-      });
-    </script>
-    <script
-      is:inline
-      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-      async
-      defer></script>
-  </body>
-</html>
+    <div class="flex flex-col gap-6">
+      <section class="basis-3/4 flex flex-col gap-3">
+        <h3 class="uppercase tracking-widest text-gray-600 text-sm">
+          Selected Work
+        </h3>
+        <div class="grid grid-cols-3 gap-5">
+          <div>
+            <h4 class="text-xl font-bold">Subrosa</h4>
+            <p class="font-light">
+              Chess engine built with Zig. Playable online
+            </p>
+            <div class="w-full aspect-video bg-gray-300"></div>
+          </div>
+          <div>
+            <h4 class="text-xl font-bold">Volume Renderer</h4>
+            <p class="font-light">3D visualization of MRIs and CT scans.</p>
+            <div class="w-full aspect-video bg-gray-300"></div>
+          </div>
+          <div>
+            <h4 class="text-xl font-bold">Raytracer</h4>
+            <p class="font-light">
+              Multithreaded raytracer to render more realistic scenery
+            </p>
+            <div class="w-full aspect-video bg-gray-300"></div>
+          </div>
+        </div>
+      </section>
+      <section class="basis-1/4 flex flex-col gap-3">
+        <h3 class="uppercase tracking-widest text-gray-600 text-sm">
+          Articles
+        </h3>
+        <div>
+          <h4 class="text-xl font-bold">Wrapping my head around bitboards</h4>
+          <p>
+            Documenting my process for understanding and implementing the board
+            representation in my chess engine.
+          </p>
+          <p class="font-light text-xs">Oct 18, 2026</p>
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

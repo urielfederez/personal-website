@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+body {
+  font-family: "Geist Variable", sans-serif;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: "Geist Mono Variable", monospace;
+}

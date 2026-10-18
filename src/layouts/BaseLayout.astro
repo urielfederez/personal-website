@@ -1,0 +1,48 @@
+---
+import "@fontsource-variable/geist";
+import "@fontsource-variable/geist-mono";
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+  showTitleInHeader?: boolean;
+}
+
+const {
+  title,
+  description = "A technical journal of projects and explorations.",
+  showTitleInHeader = true,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header
+      class={`flex items-center p-4 px-10 mb-6 ${showTitleInHeader ? "justify-between" : "justify-end"} `}
+    >
+      {showTitleInHeader && <a href="/">Uriel Federez</a>}
+
+      <nav aria-label="Main navigation" class="flex flex-row gap-4">
+        <a href="/contact/">Projects</a>
+        <a href="/contact/">Articles</a>
+        <a href="/contact/">Contact</a>
+      </nav>
+    </header>
+
+    <slot />
+
+    <footer class="p-4 px-10 border-t border-gray-300 mt-6">
+      <p>© {new Date().getFullYear()} Uriel Federez</p>
+    </footer>
+  </body>
+</html>

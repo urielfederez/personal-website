@@ -1,0 +1,52 @@
+---
+import { getCollection, render } from "astro:content";
+
+export const getStaticPaths = async () => {
+  const projects = await getCollection("projects");
+
+  return Promise.all(
+    projects.map(async (project) => ({
+      params: { slug: project.id },
+      props: { project },
+    })),
+  );
+};
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{project.data.title}</title>
+    <meta name="description" content={project.data.description} />
+  </head>
+  <body>
+    <main>
+      <h1>{project.data.title}</h1>
+      <p>{project.data.description}</p>
+
+      <p>Status: {project.data.status}</p>
+
+      <ul>
+        {project.data.technologies.map((technology) => <li>{technology}</li>)}
+      </ul>
+
+      {
+        project.data.repository && (
+          <p>
+            <a href={project.data.repository} target="_blank" rel="noreferrer">
+              Source code
+            </a>
+          </p>
+        )
+      }
+
+      <article>
+        <Content />
+      </article>
+    </main>
+  </body>
+</html>
