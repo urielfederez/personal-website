@@ -1,4 +1,7 @@
 ---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { ExternalLink } from "@lucide/astro";
+import { Image } from "astro:assets";
 import { getCollection, render } from "astro:content";
 
 export const getStaticPaths = async () => {
@@ -16,37 +19,56 @@ const { project } = Astro.props;
 const { Content } = await render(project);
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>{project.data.title}</title>
-    <meta name="description" content={project.data.description} />
-  </head>
-  <body>
-    <main>
-      <h1>{project.data.title}</h1>
-      <p>{project.data.description}</p>
+<BaseLayout title={project.data.title}>
+  <main class="flex flex-col w-full max-w-6xl mx-auto">
+    <div class="grid gap-4 grid-cols-2 items-center">
+      <div class="flex flex-col gap-4">
+        <h1 class="text-6xl font-bold">{project.data.title}</h1>
+        <p>Status: {project.data.status}</p>
 
-      <p>Status: {project.data.status}</p>
+        <!-- <ul>
+          {project.data.technologies.map((technology) => <li>{technology}</li>)}
+        </ul> -->
 
-      <ul>
-        {project.data.technologies.map((technology) => <li>{technology}</li>)}
-      </ul>
+        <p
+          class="text-xl font-light max-w-[40ch] leading-7 whitespace-pre-line"
+        >
+          {project.data.description}
+        </p>
 
-      {
-        project.data.repository && (
-          <p>
-            <a href={project.data.repository} target="_blank" rel="noreferrer">
-              Source code
-            </a>
-          </p>
-        )
-      }
+        <div class="flex">
+          {
+            project.data.repository && (
+              <a
+                class="px-3 py-2 border text-sm flex gap-2 items-center"
+                href={project.data.repository}
+                target="_blank"
+              >
+                Source code
+                <ExternalLink class="text-sm size-4" />
+              </a>
+            )
+          }
+        </div>
+      </div>
+      <Image
+        src={project.data.showcase}
+        alt={`${project.data.title} showcase`}
+        class="aspect-square w-full object-cover object-top-left"
+      />
+    </div>
 
-      <article>
+    <hr class="mt-12 border-t border-gray-300" />
+
+    <div class="max-w-xl mx-auto mt-12">
+      <article
+        class="prose prose-lg prose-neutral max-w-none
+                prose-headings:tracking-tight
+                prose-a:text-blue-600
+                prose-pre:rounded-xl"
+      >
         <Content />
       </article>
-    </main>
-  </body>
-</html>
+    </div>
+  </main></BaseLayout
+>

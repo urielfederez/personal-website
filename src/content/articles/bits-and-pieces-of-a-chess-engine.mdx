@@ -1,0 +1,247 @@
+---
+title: "The bits and pieces of a chess engine"
+description: "What bitboards are and how I implemented them in my engine"
+date: 2026-10-18
+project: "subrosa"
+---
+
+import Bitboard from "@/components/projects/subrosa/bitboard"
+
+The first decision you'll naturally run into when implementing a chess engine is: "How do
+you represent the *state* of the position?" What data format/structure would you
+use to convey that a rook is on E5, or that a bishop can move to C2, or that the
+king has no legal moves?
+
+The subtle but important note is that it's important to think about
+**positions** rather than just the placement of the pieces on the board itself.
+What moves are legal from a given position is also dependent, obviously, on the
+side whose turn it is, castling rights, pawns that can be taken *en passant*,
+and more. For this project, I chose to represent a lot of this state 
+using *bitboards*.
+
+Bitboards are nothing more than a 64-bit number (conveniently) used to
+represent which squares of the board satisfy some condition.
+
+<Bitboard 
+  caption="Set each bit clicking the square on the board and see how the bitboard changes."
+  client:visible />
+
+The wording of that last sentence is deliberate. You can use bitboards to
+represent or encode various things. For example:
+
+<ul>
+  <li>Which squares are occupied by white pawns? Or which squares are occupied by any black piece? (which we'll call *occupancy* bitboards)</li>
+  <li>Which squares can a rook on E1 control? (which we'll call *attack* bitboards).</li>
+</ul>
+
+The calculations like where pieces can legally move next using the occupancy and
+attack bitboards from the current position, can then be answered using fast
+bitwise operations.
+
+Regarding convention i.e. *which bits map to which squares?*, this is pretty
+much arbitrary. Anyone is free to follow any convention as long as they're
+consistent with it. For my engine I chose to represent A1 as the first bit and
+H8 as the last, effectively making the mapping be this pattern moves from bottom
+to top, left to right.
+
+## Occupancy Bitboards
+
+TODO
+
+A quick and easy optimization you can do is to precompute the per-side occupancy
+bitboards as their own variables. Since only a move can change the position, the
+place where you apply moves is natural place to recompute and store them.
+
+```zig
+fn applyMove(self: *Self) {
+  // ... position updated here
+  self.whiteOccupancy = /* compute occupancy for white pieces */;
+  self.blackOccupancy = /* compute occupancy for black pieces */;
+}
+```
+
+## Attack bitboards
+
+TODO
+
+## Magic bitboards
+
+I know what it sounds like but bear with me for a second.
+
+We've been discussing about pieces like pawns, knights and even the king: pieces
+whose squares they control are some fixed or known pattern (accounting for which
+pieces are in the way or the bounds of the board). But what about *sliding
+pieces* like rooks, bishops and queens? Their movement is *only* limited by the
+bounds of the board and which pieces are in the way.
+
+Of course, you can solve this for, say a rook by **iteratively** traversing the
+squares along the same rank or file, and filling out the attack bitboard,
+stopping once the relevant occupancy bit for that square is set. Similar
+approach goes for bishops but you'd always need to do this for each rook, bishop
+and queen for each side, effectively multiple `for` loops every time you evaluate
+a position. 
+
+
+### *Can* we do better?
+
+First let's unpack the main idea for sliding pieces. The moves that a sliding
+piece can make depends on:
+
+1. Where the piece is. Even assuming that there are no other pieces on the
+board, a rook on E1 has a different set of squares to move to than a rook on A6.
+2. Which squares are occupied along the path of the piece in question.
+
+I know these sound obvious, but this allows us to reframe the problem into
+concrete pieces. First: "is it possible to determine the attack bitboard
+efficiently as long as I know which squares are occupied along the path of the
+sliding piece?"
+
+Let's start with the obvious (but naïve) solution. Since a bitboard really is
+just a number, for each square, let's create a mapping or a lookup table from a
+specific occupancy bitboard to an attack bitboard.
+
+(TODO: Rook on A1, with random setup for all the pieces but the same rank&file
+following a clear pattern, show the resulting attack bitboard)
+
+That's easy. Just allocate a look up table with enough for...uhh...
+
+<center>
+  2<sup>64</sup> = 18,446,744,073,709,551,616 entries. 
+</center>
+
+That's just for *one* type of sliding piece. 
+
+The first key insight is that you only need a **small number of bits** (and so a
+smaller lookup table) to describe the occupancy along the path of that piece.  A
+rook can clearly only move to squares on either the same rank or the same file
+as its current location. For the example of the rook on A1, you'd only need **12
+bits** to map to an attack bitboard:
+
+You might say: "But I count 14 squares!" Here's where I want to bring up an
+important nuance. The occupancy I've been describing is about whether another
+piece would be "in the way" of the path the sliding piece, not necessarily
+whether another piece is *on* the square along the path. If you think about it,
+the only thing that could prevent the rook on A1 from attacking A8 is whether
+there is *something* on A7. Whether or not there actually is a piece to attack
+on A8 can be determined later once you evaluate the actual position. In a lot of
+resources, you'll see this distinction framed as pieces which are "blockers".
+
+The next nuance is that the number of bits you need changes from square to
+square. For rooks, you'd need **12 bits for A1**, but (using the same logic)
+only **10 bits for D5**.  In our example for a rook on A1, we can construct a 
+lookup table needing only 2<sup>12</sup> = 4096 entries. Play around with
+the bitboard below to see this for rooks and bishops for each square.
+
+(TODO: bitboard but instead of flipping a bit, it shows the piece and highlights
+the path for blockers, have an option to switch between rooks and bishops)
+
+What this means is that we can achieve this mapping by using our occupancy
+bitboard to produce a more compact index that allow us to look up the correct
+attack bitboard. This process is known as *hashing*. Specifically, given an
+occupancy bitboard $O$, we need some hash function $h(O)$ to produce an index
+$I$ that allows us to retrieve the corresponding attack bitboard $A(O)$. Each
+slot of our lookup table indexed by some $I$ should then provide one attack
+bitboard.
+
+$$
+h(O) = I \qquad \text{then} \qquad I \mapsto A(O)
+$$
+
+### Constructing the hash function
+
+So, we need to pick a hash function that allows us to index into a lookup
+table for an attack bitboard given an occupancy bitboard. But there are some
+aspects I want to touch on since I think it's easy to take them for granted.
+
+Obviously, two different attack bitboards $A_1$ and $A_2$ should be stored in
+different slots in this lookup table but:
+
+1. Does it make sense for two different occupancy bitboards to hash to the same index?
+2. Does it make sense for two different occupancy bitboards to map to the same attack bitboard?
+3. Does it make sense for two *different slots* to hold the same attack bitboard?
+
+When I say "does it make sense?" I mean whether a hash function that behaves
+with all those being true is *usable* to construct this lookup table. The answer
+to all is **yes**, which was surprising for me when I was learning given that
+the gut instinct is to assume things like collisions or uniqueness necessarily
+need special handling when it comes to hash functions. We'll analyze each of
+these properties one by one.
+
+#### Does it make sense for two different occupancy bitboards to hash to the same index?
+
+Yes. In fact, this is *guaranteed* by the "Pidgeonhole principle". The only
+concern is whether or not that's fine for our purposes. With the rules we've
+established for this hash function, it's fine so long as the two occupancy
+bitboards lead to the same attack bitboard anyway. Speaking of...
+
+#### Does it make sense for two different occupancy bitboards to map to the same attack bitboard?
+
+Yes. In fact, this manifests quite naturally on the board.
+
+(TODO: Our bitboard demo, but show a rook with a file that was blocked early. Explain that all other
+occupancies on the further squares still produce different occupancy bitboards, but
+the logical resulting attack bitboard is the same.)
+
+#### Does it make sense for two *different slots* to hold the same attack bitboard?
+
+Yes. Though, this is more so a consequence on the specifics of the hash function
+rather than something that manifests visually like the previous point. So long
+as all possible states of the occupancy bitboard are all accounted for and map
+to the correct attack bitboards (whatever index they may be), then the hash
+function is sufficient.
+
+This also means that our index from the hash is...just that: a number. Despite,
+in our example, the 12 bits coming from the occupancy of the same rank/file as
+our rook, the 12-bit *index* is not required to **preserve** any of that. It
+just has to be an index that maps to the correct corresponding attack bitboard.
+
+### Implementing the hash function
+
+There are obviously many different ways to transform a 64-bit number into a
+12-bit number, but I want to at least explore what properties from the output
+make *sense* given the input.
+
+### The search algorithm
+
+(TODO)
+
+## General implementation notes
+
+These are some tips or notes that I've found helpful during implementation that can help
+with optimization and debugging. But as always, be cautious about profiling
+first before prematurely applying an optimization
+
+### Have a way to easily print the state of your bitboard early on
+
+Credit goes to the *Rustic chess engine* <a id="cite-1" href="#ref-1"><sup>[1]</sup></a> for this advice, but it really helps
+to have a quick and easy way to debug bitboards early on, especially if the
+terminal is your only interface so far.
+
+For example, to build upon the Rustic chess engine article, this was what I
+printed to debug bitboards for a specific chess position, where the case follows
+the FEN convention: black pieces are in lowercase while white pieces aren't. You
+can turn the characters into simple `1`s and `0`s for printing bitboards that
+aren't related to piece placement.
+
+```plaintext
+8 | r n b q k b n r
+7 | p p p p p p p p
+6 | - - - - - - - -
+5 | - - - - - - - -
+4 | - - - - - - - -
+3 | - - - - - - - -
+2 | P P P P P P P P
+1 | R N B Q K B N R
+    ----------------
+    A B C D E F G H
+```
+
+
+## Additional Resources
+
+<ol className="references">
+  <li id="ref-1">
+    <a href="https://rustic-chess.org/board_representation/bitboards.html" target="_blank">Bitboards. <em>Board Representation</em> &mdash; Creating the Rustic chess engine</a>
+    <a href="#cite-1" aria-label="Back to citation 1"> ↩</a>
+  </li>
+</ol>

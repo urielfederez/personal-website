@@ -1,6 +1,6 @@
 ---
+import subrosaShowcase from "@/assets/projects/subrosa/showcase.png";
 import raytracerShowcase from "@/assets/raytracer-showcase.jpg";
-import subrosaShowcase from "@/assets/subrosa-showcase.png";
 import volumeRendererShowcase from "@/assets/volume-renderer-showcase.png";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { Download, ExternalLink } from "@lucide/astro";
@@ -56,16 +56,20 @@ import Image from "astro/components/Image.astro";
         </h3>
         <div class="grid grid-cols-3 gap-5">
           <div>
-            <h4 class="text-xl font-bold">Subrosa</h4>
+            <a href="/projects/subrosa" class="hover:underline">
+              <h4 class="text-xl font-bold">Subrosa</h4>
+            </a>
             <p class="font-light">
               Chess engine built with Zig. Playable online
             </p>
-            <Image
-              src={subrosaShowcase}
-              alt="Final render showcasing 3D model loading with various materials"
-              class="aspect-square w-full object-cover object-left"
-              quality={80}
-            />
+            <a href="/projects/subrosa">
+              <Image
+                src={subrosaShowcase}
+                alt=""
+                class="aspect-square w-full object-cover object-left"
+                quality={80}
+              />
+            </a>
           </div>
           <div>
             <h4 class="text-xl font-bold">Volume Renderer</h4>

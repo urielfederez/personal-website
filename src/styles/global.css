@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@import "katex/dist/katex.min.css";
 
 body {
   font-family: "Geist Variable", sans-serif;
@@ -9,4 +11,50 @@ pre,
 kbd,
 samp {
   font-family: "Geist Mono Variable", monospace;
+}
+
+.article-content {
+  --text-width: 36rem;
+  --figure-width: 42rem;
+}
+
+.article-content :is(p, h2, h3, h4, ul, ol, blockquote) {
+  max-width: var(--text-width);
+  margin-inline: auto;
+}
+
+.article-content figure,
+.article-content .astro-code,
+.article-content .wide-content {
+  max-width: var(--figure-width);
+  width: 100%;
+  margin-inline: auto;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+
+.article-content .references {
+  font-size: 0.875rem;
+}
+
+.article-content .references li {
+  padding-left: 0.25rem;
+  margin-block: 0.75rem;
+}
+
+.article-content .references a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.article-content sup {
+  line-height: 0;
+}
+.article-content :where(code)::before,
+.article-content :where(code)::after {
+  content: none;
 }

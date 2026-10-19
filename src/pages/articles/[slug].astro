@@ -1,4 +1,5 @@
 ---
+import BaseLayout from "@/layouts/BaseLayout.astro";
 import { getCollection, render } from "astro:content";
 
 export const getStaticPaths = async () => {
@@ -22,26 +23,22 @@ const dateLabel = article.data.date.toLocaleDateString("en", {
 });
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>{article.data.title}</title>
-    <meta name="description" content={article.data.description} />
-  </head>
-  <body>
-    <main>
-      <article>
-        <header>
-          <h1>{article.data.title}</h1>
-          <p>{article.data.description}</p>
-          <time datetime={article.data.date.toISOString()}>
-            {dateLabel}
-          </time>
-        </header>
-
+<BaseLayout title={article.data.title}>
+  <main class="flex flex-col w-full max-w-6xl mx-auto">
+    <div class="flex flex-col gap-6 items-stretch">
+      <div class="max-w-xl mx-auto">
+        <h1 class="text-5xl font-bold leading-tight">{article.data.title}</h1>
+        <time class="text-sm text-gray-600">{dateLabel}</time>
+      </div>
+      <article
+        class="prose prose-lg prose-neutral max-w-none
+                prose-headings:tracking-tight
+                prose-a:text-blue-600
+                prose-pre:rounded-xl
+                article-content"
+      >
         <Content />
       </article>
-    </main>
-  </body>
-</html>
+    </div>
+  </main>
+</BaseLayout>
