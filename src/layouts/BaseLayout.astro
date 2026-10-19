@@ -1,5 +1,5 @@
 ---
-import Posthog from "@/components/posthog.astro";
+import Umami from "@/components/umami.astro";
 import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";
 import "../styles/global.css";
@@ -26,7 +26,7 @@ const {
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
-    {import.meta.env.PROD && <Posthog />}
+    {import.meta.env.PROD && <Umami />}
   </head>
   <body>
     <header
