@@ -1,0 +1,30 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+type Props = {
+  article: CollectionEntry<"articles">;
+};
+
+const {
+  article: {
+    id,
+    data: { title, description, date },
+  },
+} = Astro.props;
+
+const dateLabel = date.toLocaleDateString("en", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+const href = `/articles/${id}/`;
+---
+
+<div>
+  <a href={href} class="hover:underline"
+    ><h4 class="text-xl font-bold">{title}</h4></a
+  >
+  <a href={href}><p>{description}</p></a>
+  <p class="font-light text-xs">{dateLabel}</p>
+</div>

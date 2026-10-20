@@ -1,10 +1,17 @@
 ---
-import subrosaShowcase from "@/assets/projects/subrosa/showcase.png";
-import raytracerShowcase from "@/assets/raytracer-showcase.jpg";
-import volumeRendererShowcase from "@/assets/volume-renderer-showcase.png";
+import ArticleCard from "@/components/ArticleCard.astro";
 import ProjectCard from "@/components/projects/ProjectCard.astro";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { Download, ExternalLink } from "@lucide/astro";
+import { getCollection } from "astro:content";
+
+const recentProjects = await getCollection("projects");
+recentProjects.sort(
+  (a, b) => b.data.startedDate.valueOf() - a.data.startedDate.valueOf(),
+);
+
+const recentArticles = await getCollection("articles");
+recentArticles.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
 
 <BaseLayout title="Uriel Federez" showTitleInHeader={false}>
@@ -51,39 +58,25 @@ import { Download, ExternalLink } from "@lucide/astro";
   <div class="flex flex-col gap-6">
     <section class="flex flex-col gap-3">
       <h3 class="uppercase tracking-widest text-gray-600 text-sm">
-        Selected Work
+        Recent Work
       </h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <ProjectCard
-          href="/projects/subrosa"
-          image={subrosaShowcase}
-          shortDescription="Chess engine built with Zig"
-          title="Subrosa"
-        />
-        <ProjectCard
-          href="/projects/volume-renderer"
-          image={volumeRendererShowcase}
-          shortDescription="3D visualization of MRIs and CT scans"
-          title="Volume Renderer"
-        />
-        <ProjectCard
-          href="/projects/raytracer"
-          image={raytracerShowcase}
-          shortDescription="Multithreaded 3D raytracer"
-          title="Raytracer"
-        />
+        {
+          recentProjects
+            .slice(0, 3)
+            .map((project) => <ProjectCard project={project} />)
+        }
       </div>
     </section>
     <section class="basis-1/4 flex flex-col gap-3">
-      <h3 class="uppercase tracking-widest text-gray-600 text-sm">Articles</h3>
-      <div>
-        <h4 class="text-xl font-bold">Wrapping my head around bitboards</h4>
-        <p>
-          Documenting my process for understanding and implementing the board
-          representation in my chess engine.
-        </p>
-        <p class="font-light text-xs">Oct 18, 2026</p>
-      </div>
+      <h3 class="uppercase tracking-widest text-gray-600 text-sm">
+        Recent Articles
+      </h3>
+      {
+        recentArticles
+          .slice(0, 5)
+          .map((article) => <ArticleCard article={article} />)
+      }
     </section>
   </div>
 </BaseLayout>

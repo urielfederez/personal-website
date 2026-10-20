@@ -23,22 +23,18 @@ const dateLabel = article.data.date.toLocaleDateString("en", {
 });
 ---
 
-<BaseLayout title={article.data.title}>
-  <main class="flex flex-col w-full max-w-6xl mx-auto">
-    <div class="flex flex-col gap-6 items-stretch">
-      <div class="max-w-xl mx-auto">
-        <h1 class="text-5xl font-bold leading-tight">{article.data.title}</h1>
-        <time class="text-sm text-gray-600">{dateLabel}</time>
-      </div>
-      <article
-        class="prose prose-lg prose-neutral max-w-none
+<BaseLayout title={article.data.title} mainClassName="gap-6 items-stretch">
+  <div class="max-w-xl mx-auto">
+    <h1 class="text-5xl font-bold leading-tight">{article.data.title}</h1>
+    <time class="text-sm text-gray-600">{dateLabel}</time>
+  </div>
+  <article
+    class="prose prose-lg prose-neutral max-w-none
                 prose-headings:tracking-tight
                 prose-a:text-blue-600
                 prose-pre:rounded-xl
                 article-content"
-      >
-        <Content />
-      </article>
-    </div>
-  </main>
+  >
+    <Content />
+  </article>
 </BaseLayout>

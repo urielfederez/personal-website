@@ -11,8 +11,10 @@ const projects = defineCollection({
     z.object({
       title: z.string(),
       description: z.string(),
+      shortDescription: z.string(),
       status: z.enum(["in-progress", "completed", "paused"]),
       technologies: z.array(z.string()),
+      startedDate: z.coerce.date(),
       repository: z.string().url().optional(),
       showcase: image(),
       links: z

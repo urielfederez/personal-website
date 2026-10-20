@@ -1,4 +1,5 @@
 ---
+import ArticleCard from "@/components/ArticleCard.astro";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { ExternalLink } from "@lucide/astro";
 import { Image } from "astro:assets";
@@ -16,59 +17,62 @@ export const getStaticPaths = async () => {
 };
 
 const { project } = Astro.props;
+
+const articles = await getCollection(
+  "articles",
+  ({ data }) => data.project?.id === project.id,
+);
+
 const { Content } = await render(project);
 ---
 
-<BaseLayout title={project.data.title}>
-  <main class="flex flex-col w-full max-w-6xl mx-auto">
-    <div class="grid gap-4 grid-cols-2 items-center">
-      <div class="flex flex-col gap-4">
-        <h1 class="text-6xl font-bold">{project.data.title}</h1>
-        <p>Status: {project.data.status}</p>
+<BaseLayout title={project.data.title} mainClassName="max-w-6xl">
+  <div class="grid gap-4 grid-cols-2 items-center">
+    <div class="flex flex-col gap-4">
+      <h1 class="text-6xl font-bold">{project.data.title}</h1>
+      <p>Status: {project.data.status}</p>
 
-        <!-- <ul>
+      <!-- <ul>
           {project.data.technologies.map((technology) => <li>{technology}</li>)}
         </ul> -->
 
-        <p
-          class="text-xl font-light max-w-[40ch] leading-7 whitespace-pre-line"
-        >
-          {project.data.description}
-        </p>
+      <p class="text-xl font-light max-w-[40ch] leading-7 whitespace-pre-line">
+        {project.data.description}
+      </p>
 
-        <div class="flex">
-          {
-            project.data.repository && (
-              <a
-                class="px-3 py-2 border text-sm flex gap-2 items-center"
-                href={project.data.repository}
-                target="_blank"
-              >
-                Source code
-                <ExternalLink class="text-sm size-4" />
-              </a>
-            )
-          }
-        </div>
+      <div class="flex">
+        {
+          project.data.repository && (
+            <a
+              class="px-3 py-2 border text-sm flex gap-2 items-center"
+              href={project.data.repository}
+              target="_blank"
+            >
+              Source code
+              <ExternalLink class="text-sm size-4" />
+            </a>
+          )
+        }
       </div>
-      <Image
-        src={project.data.showcase}
-        alt={`${project.data.title} showcase`}
-        class="aspect-square w-full object-cover object-top-left"
-      />
     </div>
+    <Image
+      src={project.data.showcase}
+      alt={`${project.data.title} showcase`}
+      class="aspect-square w-full object-cover object-top-left"
+    />
+  </div>
 
-    <hr class="mt-12 border-t border-gray-300" />
+  <hr class="mt-12 border-t border-gray-300" />
 
-    <div class="max-w-xl mx-auto mt-12">
-      <article
-        class="prose prose-lg prose-neutral max-w-none
+  <div class="max-w-xl mx-auto mt-6 grid gap-6">
+    <article
+      class="prose prose-lg prose-neutral max-w-none
                 prose-headings:tracking-tight
                 prose-a:text-blue-600
                 prose-pre:rounded-xl"
-      >
-        <Content />
-      </article>
-    </div>
-  </main></BaseLayout
->
+    >
+      <Content />
+    </article>
+    {articles.map((article) => <ArticleCard article={article} />)}
+  </div>
+</BaseLayout>
