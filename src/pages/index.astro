@@ -10,7 +10,10 @@ recentProjects.sort(
   (a, b) => b.data.startedDate.valueOf() - a.data.startedDate.valueOf(),
 );
 
-const recentArticles = await getCollection("articles");
+const recentArticles = await getCollection(
+  "articles",
+  ({ data }) => import.meta.env.DEV || !data.isDraft,
+);
 recentArticles.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
 
