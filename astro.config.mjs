@@ -1,5 +1,6 @@
 // @ts-check
 import { unified } from "@astrojs/markdown-remark";
+import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 import rehypeKatex from "rehype-katex";
@@ -14,7 +15,8 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
-  integrations: [mdx(), react()],
+  site: "https://urielfederez.com",
+  integrations: [mdx(), react(), sitemap()],
   markdown: {
     processor: unified({
       remarkPlugins: [remarkMath],
