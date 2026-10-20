@@ -2,110 +2,88 @@
 import subrosaShowcase from "@/assets/projects/subrosa/showcase.png";
 import raytracerShowcase from "@/assets/raytracer-showcase.jpg";
 import volumeRendererShowcase from "@/assets/volume-renderer-showcase.png";
+import ProjectCard from "@/components/projects/ProjectCard.astro";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { Download, ExternalLink } from "@lucide/astro";
-import Image from "astro/components/Image.astro";
 ---
 
 <BaseLayout title="Uriel Federez" showTitleInHeader={false}>
-  <main class="flex flex-col gap-12 w-full max-w-6xl mx-auto">
-    <div class="grid gap-4 grid-cols-2">
-      <div class="flex flex-col gap-4">
-        <h2 class="text-6xl font-bold">Uriel Federez</h2>
-        <p class="text-xl font-light max-w-[40ch]">
-          I'm a full stack software engineer from the Philippines, specializing
-          in Django, React and React Native.
-        </p>
-        <p class="text-xl font-light max-w-[40ch]">
-          I also explore computer graphics and systems programming. Here I
-          document the things I build and what I learn along the way.
-        </p>
-        <div class="flex items-center gap-4">
-          <a
-            class="px-3 py-2 border text-sm flex gap-2 items-center"
-            href="/Uriel_Federez_Resume.pdf"
-            download="Uriel_Federez_Resume.pdf"
-          >
-            Resume
-            <Download class="text-sm size-4" />
-          </a>
-          <a
-            class="px-3 py-2 border text-sm flex gap-2 items-center"
-            href="https://github.com/urielfederez"
-            target="_blank"
-          >
-            Github
-            <ExternalLink class="text-sm size-4" />
-          </a>
-          <a
-            class="px-3 py-2 border text-sm flex gap-2 items-center"
-            href="https://www.linkedin.com/in/uriel-federez"
-            target="_blank"
-          >
-            LinkedIn
-            <ExternalLink class="text-sm size-4" />
-          </a>
-        </div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <div class="flex flex-col gap-4">
+      <h2 class="text-6xl font-bold">Uriel Federez</h2>
+      <p class="text-xl font-light max-w-[40ch]">
+        I'm a full stack software engineer from the Philippines, specializing in
+        Django, React and React Native.
+      </p>
+      <p class="text-xl font-light max-w-[40ch]">
+        I also explore computer graphics and systems programming. Here I
+        document the things I build and what I learn along the way.
+      </p>
+      <div class="flex items-center gap-4">
+        <a
+          class="px-3 py-2 border text-sm flex gap-2 items-center"
+          href="/Uriel_Federez_Resume.pdf"
+          download="Uriel_Federez_Resume.pdf"
+        >
+          Resume
+          <Download class="text-sm size-4" />
+        </a>
+        <a
+          class="px-3 py-2 border text-sm flex gap-2 items-center"
+          href="https://github.com/urielfederez"
+          target="_blank"
+        >
+          Github
+          <ExternalLink class="text-sm size-4" />
+        </a>
+        <a
+          class="px-3 py-2 border text-sm flex gap-2 items-center"
+          href="https://www.linkedin.com/in/uriel-federez"
+          target="_blank"
+        >
+          LinkedIn
+          <ExternalLink class="text-sm size-4" />
+        </a>
       </div>
     </div>
+  </div>
 
-    <div class="flex flex-col gap-6">
-      <section class="flex flex-col gap-3">
-        <h3 class="uppercase tracking-widest text-gray-600 text-sm">
-          Selected Work
-        </h3>
-        <div class="grid grid-cols-3 gap-5">
-          <div>
-            <a href="/projects/subrosa" class="hover:underline">
-              <h4 class="text-xl font-bold">Subrosa</h4>
-            </a>
-            <p class="font-light">
-              Chess engine built with Zig. Playable online
-            </p>
-            <a href="/projects/subrosa">
-              <Image
-                src={subrosaShowcase}
-                alt=""
-                class="aspect-square w-full object-cover object-left"
-                quality={80}
-              />
-            </a>
-          </div>
-          <div>
-            <h4 class="text-xl font-bold">Volume Renderer</h4>
-            <p class="font-light">3D visualization of MRIs and CT scans.</p>
-            <Image
-              src={volumeRendererShowcase}
-              alt="Final render showcasing 3D model loading with various materials"
-              class="aspect-square w-full object-cover object-left"
-              quality={80}
-            />
-          </div>
-          <div>
-            <h4 class="text-xl font-bold">Raytracer</h4>
-            <p class="font-light">Multithreaded 3D raytracer</p>
-            <Image
-              src={raytracerShowcase}
-              alt="Final render showcasing 3D model loading with various materials"
-              class="aspect-square w-full object-cover"
-              quality={80}
-            />
-          </div>
-        </div>
-      </section>
-      <section class="basis-1/4 flex flex-col gap-3">
-        <h3 class="uppercase tracking-widest text-gray-600 text-sm">
-          Articles
-        </h3>
-        <div>
-          <h4 class="text-xl font-bold">Wrapping my head around bitboards</h4>
-          <p>
-            Documenting my process for understanding and implementing the board
-            representation in my chess engine.
-          </p>
-          <p class="font-light text-xs">Oct 18, 2026</p>
-        </div>
-      </section>
-    </div>
-  </main>
+  <div class="flex flex-col gap-6">
+    <section class="flex flex-col gap-3">
+      <h3 class="uppercase tracking-widest text-gray-600 text-sm">
+        Selected Work
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <ProjectCard
+          href="/projects/subrosa"
+          image={subrosaShowcase}
+          shortDescription="Chess engine built with Zig"
+          title="Subrosa"
+        />
+        <ProjectCard
+          href="/projects/volume-renderer"
+          image={volumeRendererShowcase}
+          shortDescription="3D visualization of MRIs and CT scans"
+          title="Volume Renderer"
+        />
+        <ProjectCard
+          href="/projects/raytracer"
+          image={raytracerShowcase}
+          shortDescription="Multithreaded 3D raytracer"
+          title="Raytracer"
+        />
+      </div>
+    </section>
+    <section class="basis-1/4 flex flex-col gap-3">
+      <h3 class="uppercase tracking-widest text-gray-600 text-sm">Articles</h3>
+      <div>
+        <h4 class="text-xl font-bold">Wrapping my head around bitboards</h4>
+        <p>
+          Documenting my process for understanding and implementing the board
+          representation in my chess engine.
+        </p>
+        <p class="font-light text-xs">Oct 18, 2026</p>
+      </div>
+    </section>
+  </div>
 </BaseLayout>

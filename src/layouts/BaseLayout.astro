@@ -1,11 +1,13 @@
 ---
 import Umami from "@/components/umami.astro";
+import { cn } from "@/components/utils";
 import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";
 import "../styles/global.css";
 
 interface Props {
   title: string;
+  mainClassName?: string;
   description?: string;
   showTitleInHeader?: boolean;
 }
@@ -13,6 +15,7 @@ interface Props {
 const {
   title,
   description = "A technical journal of projects and explorations.",
+  mainClassName,
   showTitleInHeader = true,
 } = Astro.props;
 ---
@@ -29,19 +32,31 @@ const {
     {import.meta.env.PROD && <Umami />}
   </head>
   <body>
-    <header
-      class={`flex items-center py-4 mb-6 max-w-6xl mx-auto ${showTitleInHeader ? "justify-between" : "justify-end"} `}
-    >
-      {showTitleInHeader && <a href="/">Uriel Federez</a>}
+    <header class="top-0 fixed w-full bg-white z-50">
+      <div
+        class={cn(
+          "max-w-6xl flex items-center py-4 mx-auto max-md:px-4",
+          showTitleInHeader ? "justify-between" : "justify-end",
+        )}
+      >
+        {showTitleInHeader && <a href="/">Uriel Federez</a>}
 
-      <nav aria-label="Main navigation" class="flex flex-row gap-4">
-        <a href="/contact/">Projects</a>
-        <a href="/contact/">Articles</a>
-        <a href="/contact/">Contact</a>
-      </nav>
+        <nav aria-label="Main navigation" class="flex flex-row gap-4">
+          <a href="/contact/">Projects</a>
+          <a href="/contact/">Articles</a>
+          <a href="/contact/">Contact</a>
+        </nav>
+      </div>
     </header>
 
-    <slot />
+    <main
+      class={cn(
+        "flex flex-col gap-12 w-full max-w-6xl mx-auto max-md:px-4 pt-20",
+        mainClassName,
+      )}
+    >
+      <slot />
+    </main>
 
     <footer class="py-4 border-t border-gray-300 mt-6">
       <div class="max-w-6xl mx-auto">

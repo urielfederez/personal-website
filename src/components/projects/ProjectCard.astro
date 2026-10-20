@@ -1,0 +1,28 @@
+---
+import type { ImageMetadata } from "astro";
+import { Image } from "astro:assets";
+
+type Props = {
+  href: string;
+  title: string;
+  shortDescription: string;
+  image: ImageMetadata;
+};
+
+const { image, href, shortDescription, title } = Astro.props;
+---
+
+<article class="group">
+  <a href={href} class="group-hover:underline">
+    <h4 class="text-xl font-bold">{title}</h4>
+  </a>
+  <p class="font-light">{shortDescription}</p>
+  <a href={href} class="peer">
+    <Image
+      src={image}
+      alt=""
+      class="aspect-square w-full object-cover object-left"
+      quality={80}
+    />
+  </a>
+</article>

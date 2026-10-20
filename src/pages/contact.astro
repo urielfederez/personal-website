@@ -6,115 +6,113 @@ const apiUrl = import.meta.env.PUBLIC_CONTACT_API_URL;
 ---
 
 <BaseLayout title="Get in touch">
-  <main class="px-10 flex flex-col gap-12">
-    <section class="max-w-prose w-full">
-      <h3 class="text-xl font-bold">Contact</h3>
-      <form class="flex flex-col gap-4" id="contact-form">
-        <div class="grid gap-2">
-          <label for="name">Name</label>
-          <input
-            name="name"
-            type="text"
-            maxlength="100"
-            class="border p-2"
-            placeholder="Your name"
-            required
-          />
-        </div>
-        <div class="grid gap-2">
-          <label for="email">E-mail</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="example@mail.com"
-            maxlength="254"
-            class="border p-2"
-            required
-          />
-        </div>
-        <div class="grid gap-2">
-          <label for="message">Message</label>
-          <textarea
-            name="message"
-            rows="3"
-            class="border p-2"
-            maxlength="5000"
-            placeholder="Let me know what you think!"
-            required></textarea>
-        </div>
-        <div class="cf-turnstile" data-sitekey={siteKey} data-action="contact">
-        </div>
-        <button
-          type="submit"
-          class="border cursor-pointer hover:bg-black hover:text-white self-end px-4 py-2"
-          >Send</button
-        >
-        <p id="contact-status" role="status" aria-live="polite"></p>
-      </form>
-    </section>
-    <script is:inline define:vars={{ apiUrl }}>
-      const form = document.querySelector("#contact-form");
-      const status = document.querySelector("#contact-status");
+  <section class="max-w-prose w-full">
+    <h3 class="text-xl font-bold">Contact</h3>
+    <form class="flex flex-col gap-4" id="contact-form">
+      <div class="grid gap-2">
+        <label for="name">Name</label>
+        <input
+          name="name"
+          type="text"
+          maxlength="100"
+          class="border p-2"
+          placeholder="Your name"
+          required
+        />
+      </div>
+      <div class="grid gap-2">
+        <label for="email">E-mail</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="example@mail.com"
+          maxlength="254"
+          class="border p-2"
+          required
+        />
+      </div>
+      <div class="grid gap-2">
+        <label for="message">Message</label>
+        <textarea
+          name="message"
+          rows="3"
+          class="border p-2"
+          maxlength="5000"
+          placeholder="Let me know what you think!"
+          required></textarea>
+      </div>
+      <div class="cf-turnstile" data-sitekey={siteKey} data-action="contact">
+      </div>
+      <button
+        type="submit"
+        class="border cursor-pointer hover:bg-black hover:text-white self-end px-4 py-2"
+        >Send</button
+      >
+      <p id="contact-status" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+  <script is:inline define:vars={{ apiUrl }}>
+    const form = document.querySelector("#contact-form");
+    const status = document.querySelector("#contact-status");
 
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-        if (!form || !status) return;
+      if (!form || !status) return;
 
-        const data = new FormData(form);
-        const turnstileToken = data.get("cf-turnstile-response");
+      const data = new FormData(form);
+      const turnstileToken = data.get("cf-turnstile-response");
 
-        if (typeof turnstileToken !== "string" || !turnstileToken) {
-          status.textContent = "Please complete the verification";
-          return;
+      if (typeof turnstileToken !== "string" || !turnstileToken) {
+        status.textContent = "Please complete the verification";
+        return;
+      }
+
+      const button = form.querySelector('button[type="submit"]');
+
+      if (button) button.disabled = true;
+      status.textContent = "Sending...";
+
+      try {
+        const result = await fetch(`${apiUrl}/contact`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: data.get("name"),
+            email: data.get("email"),
+            message: data.get("message"),
+            turnstileToken,
+          }),
+        });
+
+        const payload = await result.json();
+
+        if (!result.ok) {
+          throw new Error(payload.error || "Unable to send your message");
         }
 
-        const button = form.querySelector('button[type="submit"]');
+        status.textContent = "Message sent. Thank you!";
+        form.reset();
 
-        if (button) button.disabled = true;
-        status.textContent = "Sending...";
-
-        try {
-          const result = await fetch(`${apiUrl}/contact`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: data.get("name"),
-              email: data.get("email"),
-              message: data.get("message"),
-              turnstileToken,
-            }),
-          });
-
-          const payload = await result.json();
-
-          if (!result.ok) {
-            throw new Error(payload.error || "Unable to send your message");
-          }
-
-          status.textContent = "Message sent. Thank you!";
-          form.reset();
-
-          if (window.turnstile) {
-            window.turnstile.reset();
-          }
-        } catch (error) {
-          status.textContent =
-            error instanceof Error
-              ? error.message
-              : "Something went wrong. Please try again.";
-        } finally {
-          if (button) button.disabled = false;
+        if (window.turnstile) {
+          window.turnstile.reset();
         }
-      });
-    </script>
-    <script
-      is:inline
-      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-      async
-      defer></script>
-  </main>
+      } catch (error) {
+        status.textContent =
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again.";
+      } finally {
+        if (button) button.disabled = false;
+      }
+    });
+  </script>
+  <script
+    is:inline
+    src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+    async
+    defer></script>
 </BaseLayout>
