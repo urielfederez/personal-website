@@ -1,0 +1,6 @@
+bitboard
+bitboards
+bitwise
+Subrosa
+pseudocode
+FEN

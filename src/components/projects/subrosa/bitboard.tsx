@@ -1,3 +1,4 @@
+import { cn } from "@/components/utils";
 import { useState } from "react";
 
 type Props = {
@@ -22,11 +23,12 @@ export default function Bitboard({ caption }: Props) {
           );
         })}
       </code>
-      <div className="grid grid-cols-8 gap-1 mb-8">
+      <div className="grid grid-cols-8 mb-8">
         {new Array(64).fill(0).map((_, idx) => {
           const col = idx % 8;
           const row = 7 - Math.floor(idx / 8);
           const bitIdx = row * 8 + col;
+          const isDark = (bitIdx + row + 1) % 2 === 0;
           const bit = board & (1n << BigInt(bitIdx));
           return (
             <div
@@ -40,7 +42,11 @@ export default function Bitboard({ caption }: Props) {
                 </code>
               )}
               <button
-                className={`${bit > 0 ? "bg-sky-400" : "bg-gray-300"} cursor-pointer hover:ring-4 hover:ring-sky-300 w-full h-full`}
+                className={cn(
+                  isDark ? "bg-[#AE8A68]" : "bg-[#ECDAB9]",
+                  bit > 0 && (isDark ? "bg-[#83ae68]" : "bg-[#c3ecb9]"),
+                  "cursor-pointer hover:border-4 hover:border-[#771825] w-full h-full",
+                )}
                 onClick={() => setBoard((p) => p ^ (1n << BigInt(bitIdx)))}
               ></button>
             </div>

@@ -6,7 +6,7 @@ isDraft: true
 project: "subrosa"
 ---
 
-import Bitboard from "@/components/projects/subrosa/bitboard"
+import Bitboard from "@/components/projects/subrosa/bitboard";
 
 The first decision you'll naturally run into when implementing a chess engine is: "How do
 you represent the *state* of the position?" What data format/structure would you
@@ -41,31 +41,81 @@ bitwise operations.
 
 Regarding convention i.e. *which bits map to which squares?*, this is pretty
 much arbitrary. Anyone is free to follow any convention as long as they're
-consistent with it. For my engine I chose to represent A1 as the first bit and
-H8 as the last, effectively making the mapping be this pattern moves from bottom
-to top, left to right.
+consistent with it. For my engine, I chose to represent A1 as the least
+significant bit and H8 as the last, effectively making the mapping be this
+pattern that moves from bottom to top, left to right.
 
 ## Occupancy Bitboards
 
-TODO
+Occupancy bitboards are just bitboards that convey the presence or absence of a
+piece. Since we only have bits to work with, it becomes necessary to store
+multiple bitboards, one for each piece-color pair, to represent the piece
+placement for a position. You'd have a bitboard for white *and* black pawns,
+white and black bishops, rooks, etc. With just this setup, you'd need 12
+bitboards (6 pieces, 2 colors).
 
-A quick and easy optimization you can do is to precompute the per-side occupancy
-bitboards as their own variables. Since only a move can change the position, the
-place where you apply moves is natural place to recompute and store them.
+(TODO: add an example at least for the bitboard of white pawns in the starting position)
+
+There's really not much to it other than being consistent with how you index the
+bits based on the convention you've chosen. A neat little thing you can do is to
+create masks or constants so that you can mask off, say, E1 or the entire
+1<sup>st</sup> rank (e.g. with $\texttt{0xFF}$, assuming the convention I gave
+is used).
+
+One thing you'll find yourself doing a lot is computing bitboards of entire
+sides or even the entire board. Which is why in most cases, a quick and easy
+optimization you can do is to precompute these occupancy bitboards as their own
+variables. Since only a move can change the position, the place in the code
+where you apply moves is natural place to recompute and store them.
 
 ```zig
 fn applyMove(self: *Self) {
   // ... position updated here
   self.whiteOccupancy = /* compute occupancy for white pieces */;
   self.blackOccupancy = /* compute occupancy for black pieces */;
+  self.wholeOccupancy = /* compute occupancy for both sides */;
 }
 ```
 
-## Attack bitboards
+One last detail, especially if you're using a compiled language: check if your
+compiler supports intrinsics such as `ctz`. It stands for **C**ount **T**railing
+**Z**eroes. It's a very nifty function that pretty much does what it says, e.g. 
+`ctz(0b11001000) = 3`. In Zig, this is built into the language as 
+<a href="https://ziglang.org/documentation/master/#ctz" target="_blank"><code>@ctz</code></a>.
+
+When it comes to bitboards, `ctz` allows you to efficiently find the location
+(bit index) of the piece that corresponds to the lowest set bit (likely just
+**one** hardware-level instruction depending on your target architecture). With
+some basic bit manipulation, you can efficiently iterate over each **piece**
+instead of over each bit.
+
+```
+bitboard = /* any bitboard, e.g. white pawns */
+
+while bitboard > 0:
+  location = ctz(bitboard)
+  // do stuff with location...
+  bitboard &= bitboard - 1
+```
+
+There are other ways to do an loop that achieves the same thing but, for me,
+this is the simplest. The `bitboard - 1` flips all the trailing `0s` to `1`s and
+flips the least significant `1` to a `0`. Taking the bitwise `AND` like so
+clears that least significant set bit, meaning that the next `ctz` will
+correctly get the location of the *next* piece without additional bookkeeping.
+
+```
+  11001000  bitboard
+& 11000111  bitboard - 1
+= 11000000
+
+```
+
+## Attack Bitboards
 
 TODO
 
-## Magic bitboards
+## Magic Bitboards
 
 I know what it sounds like but bear with me for a second.
 
@@ -97,14 +147,16 @@ concrete pieces. First: "is it possible to determine the attack bitboard
 efficiently as long as I know which squares are occupied along the path of the
 sliding piece?"
 
-Let's start with the obvious (but naïve) solution. Since a bitboard really is
-just a number, for each square, let's create a mapping or a lookup table from a
-specific occupancy bitboard to an attack bitboard.
+Let's start with the obvious (albeit naïve) solution. Since a bitboard really is
+just a number, **for each square**, let's create a mapping or a lookup table
+from a specific occupancy bitboard to an attack bitboard. You'd use the
+occupancy bitboard for both sides as the index, and just mask off the occupancy
+bitboard for the same side from the attack bitboard.
 
 (TODO: Rook on A1, with random setup for all the pieces but the same rank&file
 following a clear pattern, show the resulting attack bitboard)
 
-That's easy. Just allocate a look up table with enough for...uhh...
+That's easy. Just allocate a lookup table with enough for...uhh...
 
 <center>
   2<sup>64</sup> = 18,446,744,073,709,551,616 entries. 
@@ -116,7 +168,9 @@ The first key insight is that you only need a **small number of bits** (and so a
 smaller lookup table) to describe the occupancy along the path of that piece.  A
 rook can clearly only move to squares on either the same rank or the same file
 as its current location. For the example of the rook on A1, you'd only need **12
-bits** to map to an attack bitboard:
+bits** to map to an attack bitboard. This means that we only need to consider
+$2^{12}=4096$ different bitboards, ones whose bits for those 12 relevant occupancy
+squares represent all possibilities.
 
 You might say: "But I count 14 squares!" Here's where I want to bring up an
 important nuance. The occupancy I've been describing is about whether another
@@ -129,12 +183,12 @@ resources, you'll see this distinction framed as pieces which are "blockers".
 
 The next nuance is that the number of bits you need changes from square to
 square. For rooks, you'd need **12 bits for A1**, but (using the same logic)
-only **10 bits for D5**.  In our example for a rook on A1, we can construct a 
-lookup table needing only 2<sup>12</sup> = 4096 entries. Play around with
-the bitboard below to see this for rooks and bishops for each square.
+only **10 bits for D5**. Play around with the bitboard below to see this for
+rooks and bishops for each square.
 
-(TODO: bitboard but instead of flipping a bit, it shows the piece and highlights
-the path for blockers, have an option to switch between rooks and bishops)
+import { OccupancyBits } from '@/components/projects/subrosa/OccupancyBits';
+
+<OccupancyBits client:visible />
 
 What this means is that we can achieve this mapping by using our occupancy
 bitboard to produce a more compact index that allow us to look up the correct
@@ -163,10 +217,10 @@ different slots in this lookup table but:
 
 When I say "does it make sense?" I mean whether a hash function that behaves
 with all those being true is *usable* to construct this lookup table. The answer
-to all is **yes**, which was surprising for me when I was learning given that
-the gut instinct is to assume things like collisions or uniqueness necessarily
-need special handling when it comes to hash functions. We'll analyze each of
-these properties one by one.
+to all is **yes**, which was surprising for me when I was learning given this
+that the gut instinct is to assume things like collisions or uniqueness
+necessarily need special handling when it comes to hash functions. We'll analyze
+each of these properties one-by-one.
 
 #### Does it make sense for two different occupancy bitboards to hash to the same index?
 
@@ -185,24 +239,128 @@ the logical resulting attack bitboard is the same.)
 
 #### Does it make sense for two *different slots* to hold the same attack bitboard?
 
-Yes. Though, this is more so a consequence on the specifics of the hash function
-rather than something that manifests visually like the previous point. So long
+Yes. Though, this is more of a consequence of the specifics of the hash function
+rather than something that manifests visually like the previous point. As long
 as all possible states of the occupancy bitboard are all accounted for and map
-to the correct attack bitboards (whatever index they may be), then the hash
+to the correct attack bitboards (whatever indices they may be), then the hash
 function is sufficient.
 
-This also means that our index from the hash is...just that: a number. Despite,
-in our example, the 12 bits coming from the occupancy of the same rank/file as
-our rook, the 12-bit *index* is not required to **preserve** any of that. It
+This also means that our index from the hash is...just that: a number. I mean
+despite, in our example, the 12 bits coming from the occupancy of the same
+rank/file as our rook, the 12-bit *index* does not **preserve** any of that. It
 just has to be an index that maps to the correct corresponding attack bitboard.
 
 ### Implementing the hash function
 
-There are obviously many different ways to transform a 64-bit number into a
-12-bit number, but I want to at least explore what properties from the output
-make *sense* given the input.
+There's obviously many different ways to transform a 64-bit number into a
+12-bit number. I used a well-known function that allows us to compute these
+indices for a given square. For each square, we've already determined that we'd
+use a number of bits $N$, but with that square we'll also pick some other 64-bit
+number $M$ (we'll get to that). Given our bitboard $B$, the number of bits $N$,
+and our value $M$, the index $I$ is computed by:
 
-### The search algorithm
+$$
+I = (B \cdot M) \gg (64 - N)
+$$
+<p className="text-sm text-gray-600">Note that $\gg$ means the bitwise right shift operator</p>
+
+The $\gg (64 - N)$ really just means to extract the high-order bits of that
+product (hence the shift to the right). The idea behind $B\cdot M$ is to produce
+a fast and easy-to-compute transformation of the input $B$ and *ideally* those
+high-order bits will be usable as the indices in our lookup table. 
+
+Before I explain further, let's take a specific example: given any piece type,
+and values for $B$, $M$ and $N$ (don't pay too much attention to the specific
+values, these are really just randomly generated):
+
+$$
+\begin{aligned}
+B &= \texttt{0x2bf37f7f06481c68}\\
+M &= \texttt{0x766b441a9cae450c}\\
+N &= 12\\[2em]
+I &= \texttt{0x5b47ef8869b95ce0} \gg 52\\
+I &= 1460
+\end{aligned}
+$$
+
+Note that it's important that all of this is done with arithmetic that fits
+within 64 bits. Multiplying two 64-bit values obviously would generally lead to
+a different value greater than 64 bits, so this assumes that any higher-order
+bits are discarded. Other than that, $1460$ (note that it's less than $4096$)
+would be your index in which you should store the corresponding attack bitboard
+for $B$.
+
+I haven't explained what $M$ should be but really, it can be any number so long
+as the resulting indices from **all** possible occupancy bitboards satisfy the main
+property discussed earlier, i.e. if two different occupancy bitboards correspond
+to two different attack bitboards, the indices for them should **not** be the
+same.
+
+### How do we pick this $M$, then?
+
+That's the fun part: you *guess*. Well, more specifically, you can do this
+process just by repeatedly generating random values for $M$, and checking that
+all possible occupancy bitboards map correctly. If so, that's the value for $M$
+for the square and piece in question. 
+
+By "all possible occupancy bitboards map correctly," I mean that if, as
+you're testing all the possible occupancies from a square, you find that using
+the $M$ results in an index that was already assigned an attack bitboard
+*different* from the one corresponding to the occupancy you're currently
+checking, then that value is **invalid** and you must use a different one for
+that square.
+
+The value $M$ on its own is meaningless in a chess context, and really has no
+underlying relation to the bitboard other than it's the value that makes the
+lookup table work out correctly for all possible occupancies. Hence, it's called
+the "magic" value.
+
+The pseudocode for this "search" process follows something along these lines:
+
+```pseudocode
+/**
+occupancies: 
+  - The list of all possible occupancies for a given square and 
+  piece type.  As discussed, there are 2^num_occupancy_bits 
+  of them.
+
+attacks:
+  - The list of attack bitboards corresponding to each occupancy
+
+num_occupancy_bits: 
+  - What we determined earlier from the relevant blocker squares. You
+  *could* derive this from the number of occupancies but this is 
+  included for simplicity
+
+**/
+fn generate_magic_for_square(occupancies, attacks, num_occupancy_bits)
+  while True
+    magic = <random 64-bit value>
+    lookup = <array with as many (nullable) entries as occupancies>
+    is_valid = true
+
+    for each (occupancy, attack) in pairwise(occupancies, attacks)
+      index = (occupancy * magic) >> (64 - num_occupancy_bits)
+
+      if lookup[index] is null
+        lookup[index] = attack
+        continue
+      endif
+
+      if lookup[index] != attack
+        is_valid = false
+        break
+      endif
+    endfor
+
+    if is_valid
+      return magic
+    endif
+  endwhile
+endfn
+```
+
+### What about queens?
 
 (TODO)
 
@@ -237,6 +395,21 @@ aren't related to piece placement.
     A B C D E F G H
 ```
 
+### Use "sparse" random numbers to generate candidate magic values
+
+(TODO)
+
+## Bonus: "why *that* function?"
+
+Recall the hash function we used to compute the index $I$ given the occupancy
+bitboard $B$, magic $M$ and number of bits $N$.
+
+$I = (B \cdot M) \gg (64 - N)$
+
+I quite a while just thinking about why *this* particular function. The short
+answer, unceremoniously, is that it works well.
+
+(TODO)
 
 ## Additional Resources
 
