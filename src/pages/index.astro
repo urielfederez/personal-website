@@ -1,6 +1,7 @@
 ---
 import ArticleCard from "@/components/ArticleCard.astro";
 import ProjectCard from "@/components/projects/ProjectCard.astro";
+import { LinkButton } from "@/components/ui/LinkButton";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { Download, ExternalLink } from "@lucide/astro";
 import { getCollection } from "astro:content";
@@ -30,17 +31,15 @@ recentArticles.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
         document the things I build and what I learn along the way.
       </p>
       <div class="flex items-center gap-4">
-        <a
-          class="px-3 py-2 border text-sm flex gap-2 items-center"
+        <LinkButton
           href="/Uriel_Federez_Resume.pdf"
           download="Uriel_Federez_Resume.pdf"
           data-umami-event="resume-download"
         >
           Resume
           <Download class="text-sm size-4" />
-        </a>
-        <a
-          class="px-3 py-2 border text-sm flex gap-2 items-center"
+        </LinkButton>
+        <LinkButton
           href="https://github.com/urielfederez"
           data-umami-event="social-link-click"
           data-umami-event-platform="github"
@@ -48,9 +47,8 @@ recentArticles.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
         >
           Github
           <ExternalLink class="text-sm size-4" />
-        </a>
-        <a
-          class="px-3 py-2 border text-sm flex gap-2 items-center"
+        </LinkButton>
+        <LinkButton
           href="https://www.linkedin.com/in/uriel-federez"
           data-umami-event="social-link-click"
           data-umami-event-platform="linkedin"
@@ -58,7 +56,7 @@ recentArticles.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
         >
           LinkedIn
           <ExternalLink class="text-sm size-4" />
-        </a>
+        </LinkButton>
       </div>
     </div>
   </div>

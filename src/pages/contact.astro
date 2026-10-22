@@ -1,4 +1,7 @@
 ---
+import { Button } from "@/components/ui/Button";
+import { TextArea } from "@/components/ui/TextArea";
+import { Input } from "@/components/ui/Input";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
@@ -11,44 +14,40 @@ const apiUrl = import.meta.env.PUBLIC_CONTACT_API_URL;
     <form class="flex flex-col gap-4" id="contact-form">
       <div class="grid gap-2">
         <label for="name">Name</label>
-        <input
+        <Input
           name="name"
           type="text"
-          maxlength="100"
-          class="border p-2"
+          maxLength={100}
           placeholder="Your name"
           required
         />
       </div>
       <div class="grid gap-2">
         <label for="email">E-mail</label>
-        <input
+        <Input
           id="email"
           name="email"
           type="email"
           placeholder="example@mail.com"
-          maxlength="254"
-          class="border p-2"
+          maxLength={254}
           required
         />
       </div>
       <div class="grid gap-2">
         <label for="message">Message</label>
-        <textarea
+        <TextArea
           name="message"
-          rows="3"
-          class="border p-2"
-          maxlength="5000"
           placeholder="Let me know what you think!"
-          required></textarea>
+          rows={3}
+          maxLength={5000}
+          required
+        />
       </div>
-      <div class="cf-turnstile" data-sitekey={siteKey} data-action="contact">
+      <div class="flex justify-between items-start">
+        <div class="cf-turnstile" data-sitekey={siteKey} data-action="contact">
+        </div>
+        <Button type="submit">Send</Button>
       </div>
-      <button
-        type="submit"
-        class="border cursor-pointer hover:bg-black hover:text-white self-end px-4 py-2"
-        >Send</button
-      >
       <p id="contact-status" role="status" aria-live="polite"></p>
     </form>
   </section>

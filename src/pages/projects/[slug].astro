@@ -1,5 +1,6 @@
 ---
 import ArticleCard from "@/components/ArticleCard.astro";
+import { LinkButton } from "@/components/ui/LinkButton";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { ExternalLink } from "@lucide/astro";
 import { Image } from "astro:assets";
@@ -30,7 +31,7 @@ const { Content } = await render(project);
 <BaseLayout title={project.data.title} mainClassName="max-w-6xl">
   <div class="grid gap-4 grid-cols-2 items-center">
     <div class="flex flex-col gap-4">
-      <h1 class="text-6xl font-bold">{project.data.title}</h1>
+      <h1 class="text-6xl font-bold max-w-[16ch]">{project.data.title}</h1>
       <p>Status: {project.data.status}</p>
 
       <!-- <ul>
@@ -44,14 +45,10 @@ const { Content } = await render(project);
       <div class="flex">
         {
           project.data.repository && (
-            <a
-              class="px-3 py-2 border text-sm flex gap-2 items-center"
-              href={project.data.repository}
-              target="_blank"
-            >
+            <LinkButton href={project.data.repository} target="_blank">
               Source code
               <ExternalLink class="text-sm size-4" />
-            </a>
+            </LinkButton>
           )
         }
       </div>
